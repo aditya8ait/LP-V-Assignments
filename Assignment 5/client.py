@@ -1,18 +1,30 @@
-# token_ring_client.py
-import socket, time, sys
+import socket, time
 
-id = sys.argv[1]
+ADDR, BUFFER = ("localhost", 8080), 1024
 
-s = socket.socket()
-s.connect(('localhost', 9000))
+class TokenRingClient:
+    def __init__(self):
+        self.s = socket.socket()
 
-if id == '0':  # only client 0 starts with the token
-    time.sleep(1)
-    s.sendall(b"TOKEN")
+    def connect(self):
+        self.s.connect(ADDR)
+        print("Connected to server")
 
-while True:
-    token = s.recv(1024)
-    if token:
-        print(f"Client {id} has token")
-        time.sleep(1)  # simulate critical section
-        s.sendall(token)
+    def start(self):
+        try:
+            while True:
+                data = self.s.recv(BUFFER).decode()
+                if data == "TOKEN":
+                    print("Token received. Working..."); time.sleep(5)
+                    print("Done. Passing token."); self.s.send(b"TOKEN")
+                elif data == "CLOSE":
+                    print("Server closed connection."); break
+        except KeyboardInterrupt:
+            print("Interrupted. Closing..."); self.s.send(b"CLOSE")
+        finally:
+            self.s.close()
+
+if __name__ == "__main__":
+    client = TokenRingClient()
+    client.connect()
+    client.start()

@@ -1,27 +1,46 @@
-# token_ring_server.py
 import socket, threading
 
-clients = []
+TOKEN, PORT, BUFFER = "TOKEN", 8080, 1024
 
-def handle_client(conn, addr, idx):
-    while True:
+class TokenRingServer:
+    def __init__(self):
+        self.s = socket.socket(); self.s.bind(("localhost", PORT)); self.s.listen()
+        self.clients, self.threads, self.running = [], [], True
+
+    def start(self):
+        print("Server started. Listening...")
         try:
-            data = conn.recv(1024)
-            if not data: break
-            next_conn = clients[(idx + 1) % len(clients)]
-            next_conn.sendall(data)
-        except: break
-    conn.close()
+            while self.running:
+                c, _ = self.s.accept()
+                print(f"Client connected: {c.getpeername()}")
+                self.clients.append(c)
+                if len(self.clients) == 1: c.send(TOKEN.encode())
+                t = threading.Thread(target=self.handle, args=(c,))
+                t.start(); self.threads.append(t)
+        except KeyboardInterrupt:
+            self.stop()
 
-s = socket.socket()
-s.bind(('localhost', 9000))
-s.listen(5)
+    def handle(self, c):
+        while self.running:
+            try:
+                data = c.recv(BUFFER).decode()
+                if data == "CLOSE":
+                    print(f"Client left: {c.getpeername()}")
+                    self.clients.remove(c); c.close(); break
+                if data == TOKEN and self.clients:
+                    nxt = self.clients[(self.clients.index(c) + 1) % len(self.clients)]
+                    print("Passing token")
+                    nxt.send(TOKEN.encode())
+            except: break
 
-print("Waiting for clients...")
-while len(clients) < 3:
-    conn, addr = s.accept()
-    clients.append(conn)
-    print(f"Client {len(clients)} connected")
+    def stop(self):
+        self.running = False
+        print("Shutting down...")
+        for c in self.clients:
+            try: c.send("CLOSE".encode()); c.close()
+            except: pass
+        for t in self.threads: t.join()
+        self.s.close()
 
-for i, c in enumerate(clients):
-    threading.Thread(target=handle_client, args=(c, None, i)).start()
+if __name__ == "__main__":
+    TokenRingServer().start()
