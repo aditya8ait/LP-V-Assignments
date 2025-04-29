@@ -9,7 +9,8 @@ class Bully:
     def election(self, pid):
         print(f"Process {pid} starts election")
         for i in range(pid, self.n + 1):
-            if self.up[i - 1]: cod = i; print(f"  → Election msg to process {i}")
+            if self.up[i - 1]: cod = i; 
+            print(f"  → Election msg to process {i}")
         self.leader = cod
         print(f"Process {cod} becomes coordinator")
 

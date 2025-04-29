@@ -15,12 +15,16 @@ class TokenRingClient:
             while True:
                 data = self.s.recv(BUFFER).decode()
                 if data == "TOKEN":
-                    print("Token received. Working..."); time.sleep(5)
-                    print("Done. Passing token."); self.s.send(b"TOKEN")
+                    print("Token received. Working..."); 
+                    time.sleep(5)
+                    print("Done. Passing token."); 
+                    self.s.send(b"TOKEN")
                 elif data == "CLOSE":
-                    print("Server closed connection."); break
+                    print("Server closed connection."); 
+                    break
         except KeyboardInterrupt:
-            print("Interrupted. Closing..."); self.s.send(b"CLOSE")
+            print("Interrupted. Closing..."); 
+            self.s.send(b"CLOSE")
         finally:
             self.s.close()
 
