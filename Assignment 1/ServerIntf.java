@@ -1,6 +1,6 @@
 import java.rmi.*;
 
-interface ServerIntf extends Remote{
+public interface ServerIntf extends Remote{
     public double Add(double num1, double num2) throws RemoteException;
     public double Sub(double num1, double num2) throws RemoteException;
     public double Mul(double num1, double num2) throws RemoteException;
